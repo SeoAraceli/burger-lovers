@@ -31,7 +31,9 @@ export default function Home() {
         {/* It NEVER plays autonomously — Rule 2 of the Scroll Engine.    */}
         <ScrollVideoSection
           videoSrc="/assets/scroll-video.mp4"
+          posterSrc="/assets/hero-poster.jpg"
           scrollHeight="400vh"
+          scrollHeightMobile="280vh"
         >
           <HeroOverlay />
         </ScrollVideoSection>
