@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
+/* ── McDonald's España — Brand Tokens ──────────────────────────
+   Primary:    #FFBC0D  (Golden)
+   Secondary:  #DA291C  (Red)
+   Background: #27251F  (Almost Black)
+   Accent:     #FFFFFF
+   ─────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --mc-yellow: #FFBC0D;
+  --mc-red: #DA291C;
+  --mc-dark: #27251F;
+  --mc-white: #FFFFFF;
+  --font-inter: var(--font-inter, system-ui, sans-serif);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Typography base ── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter);
+  background-color: var(--mc-dark);
+  color: var(--mc-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Custom animations ── */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* ── Scroll-video engine: ensure smooth video rendering ── */
+video {
+  will-change: auto;
+  transform: translateZ(0); /* GPU layer hint */
+}
+
+/* ── Gradient radial utility (used in product cards) ── */
+.bg-gradient-radial {
+  background: radial-gradient(circle at center, var(--tw-gradient-from), var(--tw-gradient-to, transparent));
+}
+
+/* ── Selection color ── */
+::selection {
+  background-color: var(--mc-yellow);
+  color: var(--mc-dark);
+}
+
+/* ── Focus styles ── */
+:focus-visible {
+  outline: 2px solid var(--mc-yellow);
+  outline-offset: 3px;
+}
+
+/* ── Scrollbar (webkit) ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--mc-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--mc-yellow);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e5a800;
 }
