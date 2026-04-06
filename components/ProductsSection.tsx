@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import Image from "next/image";
 
 const products = [
   {
@@ -9,28 +10,28 @@ const products = [
     description: "El icónico doble, doble sabor. Dos filetes de ternera, salsa especial y lechuga crujiente.",
     tag: "Clásico",
     tagColor: "#FFBC0D",
-    emoji: "🍔",
+    image: "/assets/images/big-mac.png",
   },
   {
     name: "McExtreme",
     description: "Para los que quieren más. Jalapeños, bacon ahumado y salsa barbacoa con doble cheddar.",
     tag: "Intenso",
     tagColor: "#DA291C",
-    emoji: "🔥",
+    image: "/assets/images/mcextreme.png",
   },
   {
     name: "McFlurry",
     description: "El postre favorito. Cremoso helado con tus extras preferidos, ahora en edición limitada.",
     tag: "Nuevo",
     tagColor: "#27251F",
-    emoji: "🍦",
+    image: "/assets/images/mcflurry.png",
   },
   {
     name: "Happy Meal",
     description: "La magia de la infancia en cada caja. Incluye sorpresa coleccionable de la temporada.",
     tag: "Familiar",
     tagColor: "#FFBC0D",
-    emoji: "⭐",
+    image: "/assets/images/happy-meal.png",
   },
 ];
 
@@ -78,8 +79,16 @@ export default function ProductsSection() {
               {/* Glow on hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-radial from-[#FFBC0D]/5 via-transparent to-transparent" />
 
-              {/* Emoji */}
-              <div className="text-5xl mb-4">{product.emoji}</div>
+              {/* Image */}
+              <div className="relative w-full h-40 mb-4 drop-shadow-2xl">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                  className="object-contain transform group-hover:scale-110 transition-transform duration-500"
+                />
+              </div>
 
               {/* Tag */}
               <span
