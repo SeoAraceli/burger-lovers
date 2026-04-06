@@ -33,7 +33,7 @@ export default function Home() {
           videoSrc="/assets/scroll-video.mp4"
           posterSrc="/assets/hero-poster.jpg"
           scrollHeight="400vh"
-          scrollHeightMobile="280vh"
+          scrollHeightMobile="340vh"
         >
           <HeroOverlay />
         </ScrollVideoSection>

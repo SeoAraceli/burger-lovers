@@ -50,9 +50,8 @@ export default function HeroOverlay() {
   const scrollProgress = useScrollProgress();
   const isMobile = useIsMobile();
 
-  // En móvil los thresholds están comprimidos: scrollHeight=340vh vs desktop 400vh
-  // m=0.55 hace que el reveal termine antes del 55% del scroll → animación más ágil
-  const m = isMobile ? 0.55 : 1.0; // multiplicador de velocidad mobile
+  // m=0.38 → el reveal completo termina al ~38% del scroll → animación muy ágil
+  const m = isMobile ? 0.38 : 1.0;
 
   const badgeProgress    = useWordReveal(scrollProgress!, 0.00,        0.06 * m);
   const word1Progress    = useWordReveal(scrollProgress!, 0.04 * m,    0.16 * m);
@@ -62,13 +61,13 @@ export default function HeroOverlay() {
   const subtitleProgress = useWordReveal(scrollProgress!, 0.40 * m,    0.55 * m);
   const ctaProgress      = useWordReveal(scrollProgress!, 0.52 * m,    0.65 * m);
 
-  const badgeStyle    = useRevealStyle(badgeProgress,    isMobile, { yFrom: -10, blurMax: 6 });
-  const word1Style    = useRevealStyle(word1Progress,    isMobile, { yFrom: 24,  blurMax: 14 });
-  const word2Style    = useRevealStyle(word2Progress,    isMobile, { yFrom: 24,  blurMax: 14 });
-  const word3Style    = useRevealStyle(word3Progress,    isMobile, { yFrom: 24,  blurMax: 14 });
-  const word4Style    = useRevealStyle(word4Progress,    isMobile, { yFrom: 24,  blurMax: 16 });
-  const subtitleStyle = useRevealStyle(subtitleProgress, isMobile, { yFrom: 16,  blurMax: 8 });
-  const ctaStyle      = useRevealStyle(ctaProgress,      isMobile, { yFrom: 16,  blurMax: 4 });
+  const badgeStyle    = useRevealStyle(badgeProgress,    isMobile, { yFrom: -8,  blurMax: 6 });
+  const word1Style    = useRevealStyle(word1Progress,    isMobile, { yFrom: 18,  blurMax: 14 });
+  const word2Style    = useRevealStyle(word2Progress,    isMobile, { yFrom: 18,  blurMax: 14 });
+  const word3Style    = useRevealStyle(word3Progress,    isMobile, { yFrom: 18,  blurMax: 14 });
+  const word4Style    = useRevealStyle(word4Progress,    isMobile, { yFrom: 18,  blurMax: 16 });
+  const subtitleStyle = useRevealStyle(subtitleProgress, isMobile, { yFrom: 12,  blurMax: 8 });
+  const ctaStyle      = useRevealStyle(ctaProgress,      isMobile, { yFrom: 12,  blurMax: 4 });
 
   const indicatorOpacity = useTransform(scrollProgress!, [0, 0.10], [1, 0]);
   // En móvil desactivamos scale (puede causar subpixel issues)

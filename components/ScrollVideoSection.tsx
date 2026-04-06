@@ -118,8 +118,18 @@ export default function ScrollVideoSection({
             muted
             playsInline
             preload={isMobile ? "metadata" : "auto"}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={isMobile ? { objectPosition: "center 20%" } : undefined}
+            className="absolute inset-0 w-full h-full"
+            style={
+              isMobile
+                ? {
+                    objectFit: "contain",      // veàs las 3 hamburguesas, sin recorte
+                    objectPosition: "center center",
+                  }
+                : {
+                    objectFit: "cover",
+                    objectPosition: "center center",
+                  }
+            }
             // NO autoPlay, NO .play() — purely scroll-driven
           />
 
