@@ -18,7 +18,7 @@ export default function ScrollVideoSection({
   posterSrc,
   children,
   scrollHeight = "400vh",
-  scrollHeightMobile = "280vh",   // móvil: zona de scroll más corta
+  scrollHeightMobile = "340vh",   // móvil: zona de scroll (más larga → animación más fluida)
 }: ScrollVideoSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -47,8 +47,8 @@ export default function ScrollVideoSection({
 
     if (video.readyState >= 2 && video.duration) {
       const targetTime = progress * video.duration;
-      // Umbral mayor en móvil → menos escrituras al decodificador de vídeo
-      const threshold = isMobile ? 0.12 : 0.05;
+      // Umbral moderado en móvil → balance entre suavidad y carga GPU
+      const threshold = isMobile ? 0.06 : 0.04;
       if (Math.abs(video.currentTime - targetTime) > threshold) {
         if (Math.abs(targetTime - lastTimeRef.current) > threshold) {
           video.currentTime = targetTime;
@@ -119,6 +119,7 @@ export default function ScrollVideoSection({
             playsInline
             preload={isMobile ? "metadata" : "auto"}
             className="absolute inset-0 w-full h-full object-cover"
+            style={isMobile ? { objectPosition: "center 20%" } : undefined}
             // NO autoPlay, NO .play() — purely scroll-driven
           />
 
