@@ -31,7 +31,7 @@ export default function Home() {
         {/* It NEVER plays autonomously — Rule 2 of the Scroll Engine.    */}
         <ScrollVideoSection
           videoSrc="/assets/scroll-video.mp4"
-          posterSrc="/assets/hero-poster.jpg"
+          posterSrc="/assets/burger-lovers-poster.png"
           scrollHeight="400vh"
           scrollHeightMobile="340vh"
         >
