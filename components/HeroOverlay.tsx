@@ -50,8 +50,8 @@ export default function HeroOverlay() {
   const scrollProgress = useScrollProgress();
   const isMobile = useIsMobile();
 
-  // m=0.38 → el reveal completo termina al ~38% del scroll → animación muy ágil
-  const m = isMobile ? 0.38 : 1.0;
+  // m=0.85 → el reveal completo termina al ~85% del scroll → menos espacio vacío en móvil
+  const m = isMobile ? 0.85 : 1.0;
 
   const badgeProgress    = useWordReveal(scrollProgress!, 0.00,        0.06 * m);
   const word1Progress    = useWordReveal(scrollProgress!, 0.04 * m,    0.16 * m);
