@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback } from "react";
 import { useScroll } from "framer-motion";
+import Image from "next/image";
 import { ScrollProgressContext } from "./ScrollProgressContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -18,44 +19,19 @@ export default function ScrollVideoSection({
   posterSrc,
   children,
   scrollHeight = "400vh",
-  scrollHeightMobile = "340vh",   // móvil: zona de scroll (más larga → animación más fluida)
+  scrollHeightMobile = "200vh",
 }: ScrollVideoSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rafRef = useRef<number | null>(null);
   const isVisibleRef = useRef(false);
   const scrollProgressRef = useRef(0);
-  const lastTimeRef = useRef(-1);   // evita micro-actualizaciones innecesarias
+  const lastTimeRef = useRef(-1);
 
   const isMobile = useIsMobile();
 
-  // En móvil: no usar scroll container grande, solo mostrar el hero estático
-  // El video muestra el poster como imagen de fondo
-  if (isMobile) {
-    return (
-      <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden bg-[#27251F]">
-        {/* Poster image as background */}
-        {posterSrc && (
-          <img
-            src={posterSrc}
-            alt="Burger Lovers"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
-        {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#27251F]/60 via-[#27251F]/10 to-[#27251F]/80" />
-        {/* Children (HeroOverlay) - shown directly without scroll animation */}
-        {children && (
-          <div className="relative z-10 h-full flex items-center justify-center">
-            {children}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  // Desktop: scroll-driven animation
-  const height = scrollHeight;
+  // Altura dinámica según dispositivo - más corta en móvil
+  const height = isMobile ? scrollHeightMobile : scrollHeight;
 
   // Rule 1 — Scroll Synchronization via framer-motion
   const { scrollYProgress } = useScroll({
@@ -72,7 +48,8 @@ export default function ScrollVideoSection({
 
     if (video.readyState >= 2 && video.duration) {
       const targetTime = progress * video.duration;
-      const threshold = 0.04;
+      // Umbral moderado en móvil → balance entre suavidad y carga GPU
+      const threshold = isMobile ? 0.06 : 0.04;
       if (Math.abs(video.currentTime - targetTime) > threshold) {
         if (Math.abs(targetTime - lastTimeRef.current) > threshold) {
           video.currentTime = targetTime;
@@ -82,7 +59,7 @@ export default function ScrollVideoSection({
     }
 
     rafRef.current = requestAnimationFrame(updateVideoTime);
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {
@@ -96,7 +73,8 @@ export default function ScrollVideoSection({
     const container = containerRef.current;
     if (!video || !container) return;
 
-    video.preload = "auto";
+    // En móvil usa preload="metadata" para no descargar todo el vídeo al inicio
+    video.preload = isMobile ? "metadata" : "auto";
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -121,7 +99,7 @@ export default function ScrollVideoSection({
       observer.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [updateVideoTime]);
+  }, [updateVideoTime, isMobile]);
 
   return (
     <ScrollProgressContext.Provider value={scrollYProgress}>
@@ -140,12 +118,19 @@ export default function ScrollVideoSection({
             poster={posterSrc}
             muted
             playsInline
-            preload="auto"
+            preload={isMobile ? "metadata" : "auto"}
             className="absolute inset-0 w-full h-full"
-            style={{
-              objectFit: "cover",
-              objectPosition: "center center",
-            }}
+            style={
+              isMobile
+                ? {
+                    objectFit: "contain",
+                    objectPosition: "center center",
+                  }
+                : {
+                    objectFit: "cover",
+                    objectPosition: "center center",
+                  }
+            }
             // NO autoPlay, NO .play() — purely scroll-driven
           />
 

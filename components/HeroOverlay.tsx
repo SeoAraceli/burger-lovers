@@ -9,7 +9,8 @@ import { useIsMobile } from "@/hooks/useIsMobile";
    Subtítulo: "Burger Lovers. Donde el sabor manda."
 
    DESKTOP: Word-by-word blur-to-sharp reveal + scale
-   MÓVIL:   Static content (no scroll animation)
+   MÓVIL:   Word-by-word opacity + translateY (SIN blur)
+            blur() es muy caro en GPU móvil → jank garantizado
 ────────────────────────────────────────────────────────── */
 
 function useWordReveal(
@@ -20,14 +21,26 @@ function useWordReveal(
   return useTransform(scrollProgress, [from, to], [0, 1]);
 }
 
+/**
+ * En desktop: opacity + blur + y
+ * En móvil: solo opacity + y (blur eliminado para evitar GPU jank)
+ */
 function useRevealStyle(
   progress: MotionValue<number>,
+  isMobile: boolean,
   options?: { yFrom?: number; blurMax?: number }
 ) {
   const { yFrom = 28, blurMax = 12 } = options ?? {};
+
   const opacity = useTransform(progress, [0, 1], [0, 1]);
-  const y = useTransform(progress, [0, 1], [yFrom, 0]);
-  const filter = useTransform(progress, [0, 1], [`blur(${blurMax}px)`, "blur(0px)"]);
+  const y = useTransform(progress, [0, 1], [isMobile ? yFrom * 0.5 : yFrom, 0]);
+  // En móvil, filter siempre blur(0px) para no activar el compositor de GPU
+  const filter = useTransform(
+    progress,
+    [0, 1],
+    isMobile ? ["blur(0px)", "blur(0px)"] : [`blur(${blurMax}px)`, "blur(0px)"]
+  );
+
   return { opacity, y, filter };
 }
 
@@ -35,36 +48,40 @@ export default function HeroOverlay() {
   const scrollProgress = useScrollProgress();
   const isMobile = useIsMobile();
 
-  // En móvil, mostrar contenido estático sin animación
-  if (isMobile) {
-    return <MobileStaticHero />;
-  }
+  // En móvil la animación se completa más rápido (scroll más corto)
+  // m=0.7 significa que todo termina al 70% del scroll
+  const m = isMobile ? 0.7 : 1.0;
 
-  // Desktop: scroll-driven animation
+  const badgeProgress    = useWordReveal(scrollProgress!, 0.00,        0.08 * m);
+  const word1Progress    = useWordReveal(scrollProgress!, 0.05 * m,    0.20 * m);
+  const word2Progress    = useWordReveal(scrollProgress!, 0.15 * m,    0.30 * m);
+  const word3Progress    = useWordReveal(scrollProgress!, 0.22 * m,    0.38 * m);
+  const word4Progress    = useWordReveal(scrollProgress!, 0.30 * m,    0.48 * m);
+  const subtitleProgress = useWordReveal(scrollProgress!, 0.42 * m,    0.60 * m);
+  const ctaProgress      = useWordReveal(scrollProgress!, 0.55 * m,    0.72 * m);
+
+  const badgeStyle    = useRevealStyle(badgeProgress,    isMobile, { yFrom: -8,  blurMax: 6 });
+  const word1Style    = useRevealStyle(word1Progress,    isMobile, { yFrom: 18,  blurMax: 14 });
+  const word2Style    = useRevealStyle(word2Progress,    isMobile, { yFrom: 18,  blurMax: 14 });
+  const word3Style    = useRevealStyle(word3Progress,    isMobile, { yFrom: 18,  blurMax: 14 });
+  const word4Style    = useRevealStyle(word4Progress,    isMobile, { yFrom: 18,  blurMax: 16 });
+  const subtitleStyle = useRevealStyle(subtitleProgress, isMobile, { yFrom: 12,  blurMax: 8 });
+  const ctaStyle      = useRevealStyle(ctaProgress,      isMobile, { yFrom: 12,  blurMax: 4 });
+
+  const indicatorOpacity = useTransform(scrollProgress!, [0, 0.12], [1, 0]);
+  // En móvil desactivamos scale (puede causar subpixel issues)
+  const headlineScale = useTransform(
+    scrollProgress!,
+    [0, 0.4],
+    isMobile ? [1, 1] : [1, 1.04]
+  );
+
   if (!scrollProgress) return <StaticFallback />;
-
-  const badgeProgress    = useWordReveal(scrollProgress, 0.00, 0.06);
-  const word1Progress    = useWordReveal(scrollProgress, 0.04, 0.16);
-  const word2Progress    = useWordReveal(scrollProgress, 0.13, 0.24);
-  const word3Progress    = useWordReveal(scrollProgress, 0.21, 0.32);
-  const word4Progress    = useWordReveal(scrollProgress, 0.28, 0.40);
-  const subtitleProgress = useWordReveal(scrollProgress, 0.40, 0.55);
-  const ctaProgress      = useWordReveal(scrollProgress, 0.52, 0.65);
-
-  const badgeStyle    = useRevealStyle(badgeProgress,    { yFrom: -8,  blurMax: 6 });
-  const word1Style    = useRevealStyle(word1Progress,    { yFrom: 18,  blurMax: 14 });
-  const word2Style    = useRevealStyle(word2Progress,    { yFrom: 18,  blurMax: 14 });
-  const word3Style    = useRevealStyle(word3Progress,    { yFrom: 18,  blurMax: 14 });
-  const word4Style    = useRevealStyle(word4Progress,    { yFrom: 18,  blurMax: 16 });
-  const subtitleStyle = useRevealStyle(subtitleProgress, { yFrom: 12,  blurMax: 8 });
-  const ctaStyle      = useRevealStyle(ctaProgress,      { yFrom: 12,  blurMax: 4 });
-
-  const indicatorOpacity = useTransform(scrollProgress, [0, 0.10], [1, 0]);
-  const headlineScale = useTransform(scrollProgress, [0, 0.4], [1, 1.04]);
 
   return (
     <div className="text-center px-5 max-w-5xl w-full select-none">
-      {/* Badge */}
+
+      {/* ── Badge ─────────────────────────────────────── */}
       <motion.div
         style={{ opacity: badgeStyle.opacity, y: badgeStyle.y }}
         className="inline-flex items-center gap-2 bg-[#FFBC0D]/20 border border-[#FFBC0D]/40 backdrop-blur-sm rounded-full px-4 py-2 mb-6 md:mb-8"
@@ -75,34 +92,59 @@ export default function HeroOverlay() {
         </span>
       </motion.div>
 
-      {/* Main Headline */}
+      {/* ── Main Headline — word by word ──────────────── */}
       <motion.div
         style={{ scale: headlineScale }}
         className="font-black text-[52px] sm:text-6xl md:text-7xl lg:text-[88px] leading-[0.95] tracking-tight"
       >
+        {/* Line 1: "Sin miedo" */}
         <div className="flex items-baseline justify-center gap-[0.2em] flex-wrap">
           <motion.span
-            style={{ opacity: word1Style.opacity, y: word1Style.y, filter: word1Style.filter }}
+            style={{
+              opacity: word1Style.opacity,
+              y: word1Style.y,
+              filter: word1Style.filter,
+              willChange: isMobile ? "auto" : "transform",
+            }}
             className="inline-block text-white"
           >
             Sin
           </motion.span>
+
           <motion.span
-            style={{ opacity: word2Style.opacity, y: word2Style.y, filter: word2Style.filter }}
+            style={{
+              opacity: word2Style.opacity,
+              y: word2Style.y,
+              filter: word2Style.filter,
+              willChange: isMobile ? "auto" : "transform",
+            }}
             className="inline-block text-white"
           >
             miedo
           </motion.span>
         </div>
+
+        {/* Line 2: "al sabor." */}
         <div className="flex items-baseline justify-center gap-[0.18em] flex-wrap mt-0.5">
           <motion.span
-            style={{ opacity: word3Style.opacity, y: word3Style.y, filter: word3Style.filter }}
+            style={{
+              opacity: word3Style.opacity,
+              y: word3Style.y,
+              filter: word3Style.filter,
+              willChange: isMobile ? "auto" : "transform",
+            }}
             className="inline-block text-white"
           >
             al
           </motion.span>
+
           <motion.span
-            style={{ opacity: word4Style.opacity, y: word4Style.y, filter: word4Style.filter }}
+            style={{
+              opacity: word4Style.opacity,
+              y: word4Style.y,
+              filter: word4Style.filter,
+              willChange: isMobile ? "auto" : "transform",
+            }}
             className="inline-block text-[#FFBC0D]"
           >
             sabor.
@@ -110,16 +152,20 @@ export default function HeroOverlay() {
         </div>
       </motion.div>
 
-      {/* Subtitle */}
+      {/* ── Subtitle ──────────────────────────────────── */}
       <motion.p
-        style={{ opacity: subtitleStyle.opacity, y: subtitleStyle.y, filter: subtitleStyle.filter }}
+        style={{
+          opacity: subtitleStyle.opacity,
+          y: subtitleStyle.y,
+          filter: subtitleStyle.filter,
+        }}
         className="text-white/65 text-base md:text-xl mt-5 md:mt-7 max-w-sm md:max-w-lg mx-auto leading-relaxed tracking-wide font-medium"
       >
         Burger Lovers.{" "}
         <span className="text-white/90 font-bold">Donde el sabor manda.</span>
       </motion.p>
 
-      {/* CTAs */}
+      {/* ── CTAs ──────────────────────────────────────── */}
       <motion.div
         style={{ opacity: ctaStyle.opacity, y: ctaStyle.y }}
         className="flex flex-wrap justify-center gap-3 md:gap-4 mt-7 md:mt-9"
@@ -138,10 +184,10 @@ export default function HeroOverlay() {
         </a>
       </motion.div>
 
-      {/* Scroll Indicator */}
+      {/* ── Scroll Indicator ──────────────────────────── */}
       <motion.div
         style={{ opacity: indicatorOpacity }}
-        className="mt-10 md:mt-14 flex flex-col items-center gap-2 pointer-events-none"
+        className="mt-8 md:mt-14 flex flex-col items-center gap-2 pointer-events-none"
       >
         <span className="text-white/35 text-[10px] tracking-[0.3em] uppercase">
           Scroll para explorar
@@ -152,60 +198,16 @@ export default function HeroOverlay() {
               key={i}
               className="w-3.5 h-3.5 border-r-2 border-b-2 border-white/30 rotate-45"
               animate={{ opacity: [0.2, 0.8, 0.2], y: [0, 4, 0] }}
-              transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+              transition={{
+                duration: 1.4,
+                repeat: Infinity,
+                delay: i * 0.18,
+                ease: "easeInOut",
+              }}
             />
           ))}
         </div>
       </motion.div>
-    </div>
-  );
-}
-
-/* ── Mobile Static Hero ─────────────────────────────────── */
-function MobileStaticHero() {
-  return (
-    <div className="text-center px-5 max-w-5xl w-full select-none">
-      {/* Badge */}
-      <div className="inline-flex items-center gap-2 bg-[#FFBC0D]/20 border border-[#FFBC0D]/40 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-        <span className="w-2 h-2 rounded-full bg-[#FFBC0D] animate-pulse" />
-        <span className="text-[#FFBC0D] text-[11px] font-bold tracking-[0.2em] uppercase">
-          Burger Lovers — Meat Lover Edition
-        </span>
-      </div>
-
-      {/* Headline */}
-      <h1 className="font-black text-[52px] sm:text-6xl leading-[0.95] tracking-tight">
-        <div className="flex items-baseline justify-center gap-[0.2em] flex-wrap">
-          <span className="inline-block text-white">Sin</span>
-          <span className="inline-block text-white">miedo</span>
-        </div>
-        <div className="flex items-baseline justify-center gap-[0.18em] flex-wrap mt-0.5">
-          <span className="inline-block text-white">al</span>
-          <span className="inline-block text-[#FFBC0D]">sabor.</span>
-        </div>
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-white/65 text-base mt-5 max-w-sm mx-auto leading-relaxed tracking-wide font-medium">
-        Burger Lovers.{" "}
-        <span className="text-white/90 font-bold">Donde el sabor manda.</span>
-      </p>
-
-      {/* CTAs */}
-      <div className="flex flex-wrap justify-center gap-3 mt-7">
-        <a
-          href="#carta"
-          className="bg-[#FFBC0D] active:bg-[#e5a800] text-[#27251F] font-black text-sm px-7 py-3 rounded-full transition-colors duration-150 shadow-lg shadow-[#FFBC0D]/30"
-        >
-          Ver la Carta
-        </a>
-        <a
-          href="#app"
-          className="bg-white/10 active:bg-white/20 text-white font-bold text-sm px-7 py-3 rounded-full border border-white/20 transition-colors duration-150"
-        >
-          Descargar App
-        </a>
-      </div>
     </div>
   );
 }
