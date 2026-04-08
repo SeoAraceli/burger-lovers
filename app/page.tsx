@@ -33,7 +33,6 @@ export default function Home() {
           videoSrc="/assets/scroll-video.mp4"
           posterSrc="/assets/burger-lovers-poster.png"
           scrollHeight="400vh"
-          scrollHeightMobile="120vh"
         >
           <HeroOverlay />
         </ScrollVideoSection>

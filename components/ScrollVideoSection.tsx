@@ -29,8 +29,33 @@ export default function ScrollVideoSection({
 
   const isMobile = useIsMobile();
 
-  // Altura dinámica según dispositivo
-  const height = isMobile ? scrollHeightMobile : scrollHeight;
+  // En móvil: no usar scroll container grande, solo mostrar el hero estático
+  // El video muestra el poster como imagen de fondo
+  if (isMobile) {
+    return (
+      <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden bg-[#27251F]">
+        {/* Poster image as background */}
+        {posterSrc && (
+          <img
+            src={posterSrc}
+            alt="Burger Lovers"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#27251F]/60 via-[#27251F]/10 to-[#27251F]/80" />
+        {/* Children (HeroOverlay) - shown directly without scroll animation */}
+        {children && (
+          <div className="relative z-10 h-full flex items-center justify-center">
+            {children}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  // Desktop: scroll-driven animation
+  const height = scrollHeight;
 
   // Rule 1 — Scroll Synchronization via framer-motion
   const { scrollYProgress } = useScroll({
@@ -47,8 +72,7 @@ export default function ScrollVideoSection({
 
     if (video.readyState >= 2 && video.duration) {
       const targetTime = progress * video.duration;
-      // Umbral moderado en móvil → balance entre suavidad y carga GPU
-      const threshold = isMobile ? 0.06 : 0.04;
+      const threshold = 0.04;
       if (Math.abs(video.currentTime - targetTime) > threshold) {
         if (Math.abs(targetTime - lastTimeRef.current) > threshold) {
           video.currentTime = targetTime;
@@ -58,7 +82,7 @@ export default function ScrollVideoSection({
     }
 
     rafRef.current = requestAnimationFrame(updateVideoTime);
-  }, [isMobile]);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {
@@ -72,8 +96,7 @@ export default function ScrollVideoSection({
     const container = containerRef.current;
     if (!video || !container) return;
 
-    // En móvil usa preload="metadata" para no descargar todo el vídeo al inicio
-    video.preload = isMobile ? "metadata" : "auto";
+    video.preload = "auto";
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -98,7 +121,7 @@ export default function ScrollVideoSection({
       observer.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [updateVideoTime, isMobile]);
+  }, [updateVideoTime]);
 
   return (
     <ScrollProgressContext.Provider value={scrollYProgress}>
@@ -117,19 +140,12 @@ export default function ScrollVideoSection({
             poster={posterSrc}
             muted
             playsInline
-            preload={isMobile ? "metadata" : "auto"}
+            preload="auto"
             className="absolute inset-0 w-full h-full"
-            style={
-              isMobile
-                ? {
-                    objectFit: "contain",      // veàs las 3 hamburguesas, sin recorte
-                    objectPosition: "center center",
-                  }
-                : {
-                    objectFit: "cover",
-                    objectPosition: "center center",
-                  }
-            }
+            style={{
+              objectFit: "cover",
+              objectPosition: "center center",
+            }}
             // NO autoPlay, NO .play() — purely scroll-driven
           />
 

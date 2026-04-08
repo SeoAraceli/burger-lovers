@@ -43,7 +43,7 @@ export default function ProductsSection() {
     <section
       ref={ref}
       id="carta"
-      className="bg-[#27251F] py-24 px-6"
+      className="bg-[#27251F] py-12 md:py-24 px-6"
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
