@@ -189,7 +189,7 @@ export default function HeroOverlay() {
       {/* ── Scroll Indicator ──────────────────────────── */}
       <motion.div
         style={{ opacity: indicatorOpacity }}
-        className="mt-10 md:mt-14 flex flex-col items-center gap-2 pointer-events-none"
+        className="mt-6 md:mt-14 flex flex-col items-center gap-2 pointer-events-none"
       >
         <span className="text-white/35 text-[10px] tracking-[0.3em] uppercase">
           Scroll para explorar
